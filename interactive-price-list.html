@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academia Cortex - Lista de Precios</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            background-color: white;
+            border-radius: 5px;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="title">Academia Cortex</h1>
+        
+        <div class="mb-6 flex justify-between items-center">
+            <span class="text-xl font-semibold">Argentina</span>
+            <div class="flex items-center">
+                <span class="mr-2">Dólar Blue:</span>
+                <input type="number" id="dolarBlue" class="border rounded px-2 py-1" value="1000">
+            </div>
+        </div>
+
+        <div class="mb-6 bg-white rounded-lg p-4 shadow">
+            <h2 class="text-lg font-semibold mb-2">Datos del Cliente</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" placeholder="Nombre" class="border rounded px-2 py-1">
+                <input type="text" placeholder="Apellido" class="border rounded px-2 py-1">
+                <input type="tel" placeholder="Teléfono" class="border rounded px-2 py-1">
+                <input type="text" placeholder="Ciudad" class="border rounded px-2 py-1">
+            </div>
+        </div>
+
+        <div class="mb-6 bg-white rounded-lg p-4 shadow">
+            <h2 class="text-lg font-semibold mb-2">Información Corporal</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" id="edad" placeholder="Edad" class="border rounded px-2 py-1">
+                <input type="number" id="altura" placeholder="Altura (cm)" class="border rounded px-2 py-1">
+                <input type="number" id="peso" placeholder="Peso (kg)" class="border rounded px-2 py-1">
+                <select id="genero" class="border rounded px-2 py-1">
+                    <option value="">Seleccione género</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="femenino">Femenino</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
+            <button onclick="calcularIMC()" class="mt-4 btn">Calcular IMC</button>
+            <div id="resultadoIMC" class="mt-4"></div>
+        </div>
+
+        <div class="mb-6 flex justify-center">
+            <button onclick="seleccionarCombo('hombre')" class="btn">Combo 30 días Hombre</button>
+            <button onclick="seleccionarCombo('mujer')" class="btn">Combo 30 días Mujer</button>
+        </div>
+
+        <table class="w-full bg-white rounded-lg overflow-hidden shadow-lg">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio (USD)</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal (USD)</th>
+                    <th>Precio (ARS)</th>
+                </tr>
+            </thead>
+            <tbody id="productList">
+                <!-- Product rows will be dynamically added here -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-right font-bold">Total:</td>
+                    <td id="totalUSD" class="font-bold"></td>
+                    <td id="totalARS" class="font-bold"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-6 flex justify-between">
+            <button onclick="window.print()" class="btn">Imprimir</button>
+            <a href="#" id="whatsappLink" class="btn">Enviar a WhatsApp</a>
+        </div>
+
+        <!-- [El resto del HTML permanece igual] -->
+    </div>
+
+    <script>
+        const products = [
+            {name: "Multivitamínico", price: 36.3},
+            {name: "K2 sp", price: 16.2},
+            {name: "D3 r44", price: 13.35},
+            {name: "zinc + quercetina", price: 14.7},
+            {name: "Selenio", price: 11.25},
+            {name: "Magnesio quelado", price: 12.75},
+            {name: "Meganesios *4 tipos en 1*", price: 24.15},
+            {name: "DHEA tr+cs", price: 30.0}
+        ];
+
+        const productList = document.getElementById('productList');
+        const totalUSD = document.getElementById('totalUSD');
+        const totalARS = document.getElementById('totalARS');
+        const dolarBlueInput = document.getElementById('dolarBlue');
+        const whatsappLink = document.getElementById('whatsappLink');
+
+        function updateTotals() {
+            let totalUSDValue = 0;
+            const dolarBlue = parseFloat(dolarBlueInput.value) || 1;
+
+            products.forEach((product, index) => {
+                const quantity = parseInt(document.getElementById(`quantity-${index}`).value) || 0;
+                const subtotalUSD = product.price * quantity;
+                const subtotalARS = subtotalUSD * dolarBlue;
+
+                document.getElementById(`subtotal-${index}`).textContent = `$${subtotalUSD.toFixed(2)}`;
+                document.getElementById(`ars-${index}`).textContent = `$${subtotalARS.toFixed(2)}`;
+
+                totalUSDValue += subtotalUSD;
+            });
+
+            const totalARSValue = totalUSDValue * dolarBlue;
+
+            totalUSD.textContent = `$${totalUSDValue.toFixed(2)}`;
+            totalARS.textContent = `$${totalARSValue.toFixed(2)}`;
+
+            updateWhatsAppLink(totalUSDValue, totalARSValue);
+        }
+
+        function updateWhatsAppLink(totalUSD, totalARS) {
+            const phoneNumber = "+5492974430782";
+            const message = `Hola, estoy interesado en comprar suplementos por un total de $${totalUSD.toFixed(2)} USD ($${totalARS.toFixed(2)} ARS).`;
+            whatsappLink.href = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        }
+
+        function seleccionarCombo(tipo) {
+            // Reiniciar todas las cantidades a 0
+            products.forEach((_, index) => {
+                document.getElementById(`quantity-${index}`).value = 0;
+            });
+
+            if (tipo === 'hombre') {
+                document.getElementById('quantity-0').value = 1; // Multivitamínico
+                document.getElementById('quantity-1').value = 1; // K2 sp
+                document.getElementById('quantity-2').value = 1; // D3 r44
+                document.getElementById('quantity-6').value = 1; // Meganesios *4 tipos en 1*
+                document.getElementById('quantity-7').value = 1; // DHEA tr+cs
+            } else if (tipo === 'mujer') {
+                document.getElementById('quantity-0').value = 1; // Multivitamínico
+                document.getElementById('quantity-1').value = 1; // K2 sp
+                document.getElementById('quantity-2').value = 1; // D3 r44
+                document.getElementById('quantity-6').value = 1; // Meganesios *4 tipos en 1*
+                document.getElementById('quantity-3').value = 1; // zinc + quercetina
+                document.getElementById('quantity-4').value = 1; // Selenio
+            }
+
+            updateTotals();
+        }
+
+        products.forEach((product, index) => {
+            const row = productList.insertRow();
+            row.innerHTML = `
+                <td>${product.name}</td>
+                <td>$${product.price.toFixed(2)}</td>
+                <td><input type="number" id="quantity-${index}" value="0" min="0" class="border rounded px-2 py-1" onchange="updateTotals()"></td>
+                <td id="subtotal-${index}">$0.00</td>
+                <td id="ars-${index}">$0.00</td>
+            `;
+        });
+
+        dolarBlueInput.addEventListener('input', updateTotals);
+        updateTotals();
+
+        function calcularIMC() {
+            const peso = parseFloat(document.getElementById('peso').value);
+            const altura = parseFloat(document.getElementById('altura').value) / 100; // convertir cm a m
+            const edad = parseInt(document.getElementById('edad').value);
+            const genero = document.getElementById('genero').value;
+
+            if (peso && altura && edad && genero) {
+                const imc = peso / (altura * altura);
+                let resultado = `Su IMC es ${imc.toFixed(2)}. `;
+
+                if (imc < 18.5) {
+                    resultado += "Bajo peso.";
+                } else if (imc < 25) {
+                    resultado += "Peso normal.";
+                } else if (imc < 30) {
+                    resultado += "Sobrepeso.";
+                } else {
+                    resultado += "Obesidad.";
+                }
+
+                // Cálculo de peso ideal (fórmula de Hamwi)
+                let pesoIdeal;
+                if (genero === 'masculino') {
+                    pesoIdeal = 48 + 2.7 * (altura * 100 - 152.4) / 2.54;
+                } else if (genero === 'femenino') {
+                    pesoIdeal = 45.5 + 2.2 * (altura * 100 - 152.4) / 2.54;
+                } else {
+                    pesoIdeal = (48 + 45.5) / 2 + 2.45 * (altura * 100 - 152.4) / 2.54;
+                }
+
+                resultado += ` Su peso ideal estimado es ${pesoIdeal.toFixed(1)} kg.`;
+
+                document.getElementById('resultadoIMC').innerHTML = resultado;
+            } else {
+                document.getElementById('resultadoIMC').innerHTML = "Por favor, complete todos los campos.";
+            }
+        }
+    </script>
+</body>
+</html>
